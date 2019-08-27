@@ -1,22 +1,105 @@
 #include "scene.h"
 
 Scene::Scene(int rowsColsCount)
-{
+{ 
     int maxValue=rowsColsCount+2;
-    QVector<QVector<Cell*> >cells;
 
     for(int row=0;row!=maxValue;++row){
-        QVector<Cell*> colVec;
-        cells.append(colVec);
+        QVector<CellImage*> colVec;
+
         for(int col=0;col!=maxValue;++col){
-            Cell *cell=new Cell(row,col,EMPTY);
+            CellImage *cell=new CellImage(row,col,EMPTY);
+            canBeFood.append(cell);
             if (0==row || 0==col || maxValue-1==row || maxValue-1==col){
-                cell->type=WALL;
+                cell->updateType(WALL);
+                canBeFood.removeLast();
             }
             colVec.append(cell);
             this->addItem(cell);
         }
+        cells.append(colVec);
     }
     this->setBackgroundBrush(Qt::blue);
+    way=DOWN;
+
+    createFood();
+
+    int row=qrand() % canBeFood.size();
+    auto beSnake=canBeFood[row];
+    beSnake->updateType(SNAKE);
+    snake.append(beSnake);
+    canBeFood.removeAt(row);
+
+    this->timer.setInterval(500 );//1 sec 1000 ms
+    connect(&timer, SIGNAL(timeout()), this, SLOT(updateTime()));
+    this->timer.start();
 }
+
+void Scene::createFood()
+{
+    int row=qrand() % canBeFood.size();
+    canBeFood[row]->updateType(FOOD);
+    canBeFood.removeAt(row);
+
+}
+
+void Scene::keyPressEvent(QKeyEvent *keyEvent)
+{
+    switch(keyEvent->key()){
+        case Qt::Key_Down: way=DOWN;qDebug()<<"DOWN";break;
+        case Qt::Key_Right: way=RIGHT;qDebug()<<"RIGHT";break;
+        case Qt::Key_Up: way=TOP;qDebug()<<"TOP";break;
+        case Qt::Key_Left: way=LEFT;qDebug()<<"LEFT";break;
+        case Qt::Key_Escape:  break;
+    }
+}
+
+void Scene::endGame(bool win)
+{
+    this->timer.stop();
+    if(false==win){
+        this->setBackgroundBrush(Qt::red);
+    }else{
+        this->setBackgroundBrush(Qt::black);
+    }
+}
+
+void Scene::updateTime()
+{
+    CellImage *nextCell;
+    CellImage * last=snake.last();
+
+    if(DOWN==way){
+        nextCell=cells[last->row][last->col+1];
+    }else if(RIGHT==way){
+        nextCell=cells[last->row+1][last->col];
+    }else if(TOP==way){
+        nextCell=cells[last->row][last->col-1];
+    }else if(LEFT==way){
+        nextCell=cells[last->row-1][last->col];
+    }
+
+    if (WALL==nextCell->type || SNAKE==nextCell->type){
+        endGame(false);
+    }else if (FOOD==nextCell->type){
+        nextCell->updateType(SNAKE);
+        canBeFood.removeOne(nextCell);
+        snake.append(nextCell);
+        this->createFood();
+        qDebug()<<"go in food";
+        //nextCell->startAnimation();
+    }else if (EMPTY==nextCell->type){
+        auto first=snake.first();
+        first->updateType(EMPTY);
+        first->startAnimation();
+        canBeFood.append(first);
+        snake.pop_front();
+
+        nextCell->updateType(SNAKE);
+        qDebug()<<"begin"<<nextCell->activeIndex;
+        snake.append(nextCell);
+        nextCell->startAnimation();
+    }
+}
+
 

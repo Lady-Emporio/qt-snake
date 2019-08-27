@@ -7,6 +7,7 @@ MainWindow::MainWindow(QWidget *parent)
     QHBoxLayout * mainLayout=new QHBoxLayout();
     QVBoxLayout * leftLayout=new QVBoxLayout();
     QVBoxLayout * rightLayout=new QVBoxLayout();
+    rightLayout->setAlignment(Qt::AlignTop);
     mainLayout->addLayout(leftLayout);
     mainLayout->addLayout(rightLayout);
     mainWidget->setLayout(mainLayout);
@@ -36,6 +37,8 @@ MainWindow::~MainWindow()
 void MainWindow::on_debugMap_clicked()
 {
 
+  // this->view->scene->cells[2][2]->startAnimation();
+    //this->view->scene->createFood();
 }
 
 void MainWindow::on_start_clicked()
