@@ -30,9 +30,9 @@ Scene::Scene(int rowsColsCount)
     snake.append(beSnake);
     canBeFood.removeAt(row);
 
-    this->timer.setInterval(500 );//1 sec 1000 ms
+    this->timer.setInterval(1000 );//1 sec 1000 ms
     connect(&timer, SIGNAL(timeout()), this, SLOT(updateTime()));
-    this->timer.start();
+
 }
 
 void Scene::createFood()
@@ -50,7 +50,13 @@ void Scene::keyPressEvent(QKeyEvent *keyEvent)
         case Qt::Key_Right: way=RIGHT;qDebug()<<"RIGHT";break;
         case Qt::Key_Up: way=TOP;qDebug()<<"TOP";break;
         case Qt::Key_Left: way=LEFT;qDebug()<<"LEFT";break;
-        case Qt::Key_Escape:  break;
+        case Qt::Key_Escape:
+            if (timer.isActive()){
+                timer.stop();
+            }else{
+                this->timer.start();
+            }
+          break;
     }
 }
 
@@ -66,6 +72,10 @@ void Scene::endGame(bool win)
 
 void Scene::updateTime()
 {
+    if (0==canBeFood.size()){
+        endGame(true);
+        return;
+    }
     CellImage *nextCell;
     CellImage * last=snake.last();
 
@@ -86,8 +96,6 @@ void Scene::updateTime()
         canBeFood.removeOne(nextCell);
         snake.append(nextCell);
         this->createFood();
-        qDebug()<<"go in food";
-        //nextCell->startAnimation();
     }else if (EMPTY==nextCell->type){
         auto first=snake.first();
         first->updateType(EMPTY);
@@ -96,9 +104,9 @@ void Scene::updateTime()
         snake.pop_front();
 
         nextCell->updateType(SNAKE);
-        qDebug()<<"begin"<<nextCell->activeIndex;
         snake.append(nextCell);
         nextCell->startAnimation();
+        canBeFood.removeOne(nextCell);
     }
 }
 

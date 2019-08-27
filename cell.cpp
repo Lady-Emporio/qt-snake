@@ -97,7 +97,6 @@ void CellImage::updateTime()
             activeIndex=5;
             timer.stop();
         }
-        qDebug()<<activeIndex;
         this->setPixmap( pixmaps[activeIndex]);
     }
 
